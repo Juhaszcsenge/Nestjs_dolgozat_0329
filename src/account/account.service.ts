@@ -19,7 +19,7 @@ export class AccountService {
       await AccountRep.save(newAccount)
     }
  
-  async addAccountToBank(accountid : Number, ownerid : number)
+  async addAccountToBank(accountid : Number, ownerid : number){
     const AccountRep = this.dataSource.getRepository(Account)
     const OwnerRepo = this.dataSource.getRepository(Owner)
     const Account = await AccountRep.findOne({where: {id : accountid}, relations : {Owner : true}}})

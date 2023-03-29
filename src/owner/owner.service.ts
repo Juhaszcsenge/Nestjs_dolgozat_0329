@@ -1,26 +1,48 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { DataSource } from 'typeorm';
 import { CreateOwnerDto } from './dto/create-owner.dto';
 import { UpdateOwnerDto } from './dto/update-owner.dto';
+import { Owner } from './entities/owner.entity';
 
 @Injectable()
 export class OwnerService {
-  create(createOwnerDto: CreateOwnerDto) {
-    return 'This action adds a new owner';
+  constructor(private dataSource: DataSource) {}
+
+  async create(createOwnerDto: CreateOwnerDto) {
+    const OwnerRepo = this.dataSource.getRepository(Owner);
+    const newOwner = new Owner();
+    newOwner.fullName = createOwnerDto.name;
+    newOwner.business = createOwnerDto.bussines;
+    await OwnerRepo.save(newOwner);
   }
 
-  findAll() {
-    return `This action returns all owner`;
+  async findAll() {
+    return await this.dataSource.getRepository(Owner).find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} owner`;
+  async findOne(id: number) {
+    return await this.dataSource.getRepository(Owner).findBy({ id: id });
   }
 
-  update(id: number, updateOwnerDto: UpdateOwnerDto) {
-    return `This action updates a #${id} owner`;
+  async update(id: number, updateOwnerDto: UpdateOwnerDto) {
+    const OwnerRepo = this.dataSource.getRepository(Owner);
+    if (!(await OwnerRepo.findOneBy({ id: id }))) {
+      throw new BadRequestException('Ilyen id-val nem található user');
+    }
+    const OwnerToUpdate = await OwnerRepo.findOneBy({ id });
+    if (updateOwnerDto.bussines == null && updateOwnerDto.name == null) {
+      throw new BadRequestException('Nem társul semmilyen adat');
+    }
+    OwnerToUpdate.fullName = updateOwnerDto.name;
+    OwnerToUpdate.business = updateOwnerDto.bussines;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} owner`;
+  async remove(id: number) {
+    const OwnerRepo = this.dataSource.getRepository(Owner);
+
+    if (!(await OwnerRepo.findOneBy({ id: id }))) {
+      throw new BadRequestException('Ilyen id-val nem található');
+    }
+    OwnerRepo.delete(id);
   }
 }
